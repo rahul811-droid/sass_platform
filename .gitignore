@@ -1,0 +1,9 @@
+
+/generated/prisma
+
+/generated/prisma
+
+.env
+package.json
+prisma/schema.prisma
+node_modules/
