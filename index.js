@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
+import userRoutes from './src/routes/user.route.js';
 
 
 const app = express();
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
-
+app.use('/api/users', userRoutes);
 app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
