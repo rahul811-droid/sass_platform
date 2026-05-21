@@ -1,155 +1,151 @@
-import prisma from '../config/db.js';
+import prisma from "../config/db.js";
 
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { createUserSchema } from '../validations/auth.validation.js';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { createUserSchema } from "../validations/auth.validation.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
+export const createUser = asyncHandler(async (req, res, next) => {
+  const validateData = createUserSchema.safeParse(req.body);
 
-
-export const createUser = async (req, res) => {
-  try {
-    const validateData = createUserSchema.safeParse(req.body);
-    if (!validateData.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid input data",
-        errors: validateData.error.issues
-      });
-    }
-    const { name, email, password } = validateData.data;
-
-    console.log("req.body", req.body);
-
-    
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      user,
-    });
-
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+  if (!validateData.success) {
+    return next(new AppError("Invalid input data", 400));
   }
-};
 
-export const getUsers = async (req, res) => {
-  try {
-    const users = await prisma.user.findMany();
+  const { name, email, password } = validateData.data;
 
-    res.json({
-      success: true,
-      users,
-    });
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
 
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-    });
+  if (existingUser) {
+    return next(new AppError("User already exists", 400));
   }
-};
 
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-export const loginUser = async(req,res)=>{
-      try {
-          const {email,password} = req.body;
-          const user = await prisma.user.findUnique({
-            where:{
-              email
-            }
-          })
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+    },
+  });
 
-          if(!user){
-            return res.status(404).json({
-              success:false,
-              message:"User not found"
-            })
+  res.status(201).json({
+    success: true,
+    message: "User created successfully",
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+  });
+});
+export const getUsers = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = page > 1 ? (page - 1) * 10 : 0;
+  const search = req.query.search || "";
+  const sortby = req.query.sortby || "id";
+  const sortorder = req.query.sortorder || "desc";
+  const role = req.query.role || "";
+
+  const where = {
+    AND: [
+      search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
           }
+        : {},
+      role ? { role: role } : {},
+    ],
+  };
 
-          const isMatch  = await bcrypt.compare(password,user.password);
-          if(!isMatch){
-            return res.status(400).json({
-              success:false,
-              message:"Invalid credentials"
-            })
-          }
-          const token = jwt.sign({id:user.id},process.env.JWT_SECRET,{
-          expiresIn:"1d"
-        })
-        res.json({
-          success:true,
-          message:"Login successful",
-          token
-        })
-      } catch (error) {
-        
-        console.log(error);
-        res.status(500).json({
-          success:false,
-          message:"Server Error"
-        })
-        
-      }
-}
+  const totalUsers = await prisma.user.count({ where });
 
-export const getProfile = async(req,res)=>{
-      try {
-        const user = await prisma.user.findUnique({
-          where:{
-            id:req.user.id
-          },
-          select:{
-            id:true,
-            name:true,
-            email:true
-          }
-        })
-        if(!user){
-          return res.status(404).json({
-            success:false,
-            message:"User not found"
-          })
-        }
-        res.json({
-          success:true,
-          user
-        })
-      } catch (error) {
-          console.log(error);
-          res.status(500).json({
-            success:false,
-            message:"Server Error"
-          })
-      }
+  const users = await prisma.user.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: {
+      id: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
+  });
 
-}
+  res.status(200).json({
+    success: true,
+    pagination: {
+      totalUsers,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      limit,
+    },
+    filters:{
+      search,
+      sortby,
+      sortorder,
+      role
+    },
+    users,
+  });
+});
+
+export const loginUser = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return next(new AppError("Invalid credentials", 401));
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return next(new AppError("Invalid credentials", 401));
+  }
+
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Login successful",
+    token,
+  });
+});
+
+export const getProfile = asyncHandler(async (req, res, next) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: req.user.id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+});

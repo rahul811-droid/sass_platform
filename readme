@@ -1,0 +1,89 @@
+
+LMS-PROJECT Backend - API Documentation
+
+Overview
+This document describes the user-related REST API endpoints in the lms-backend. All endpoints are JSON-based. Authentication uses JWT in the Authorization header as: Bearer <token>.
+
+Base URL
+- Local: http://localhost:PORT/api (replace PORT with your server port)
+
+Endpoints
+
+1) Create User
+- POST /users
+- Description: Register a new user.
+- Body (application/json):
+	{
+		"name": "string",
+		"email": "user@example.com",
+		"password": "string"
+	}
+- Success (201):
+	{
+		"success": true,
+		"message": "User created successfully",
+		"user": { "id": number, "name": "string", "email": "string" }
+	}
+- Errors: 400 for validation or if user already exists.
+
+2) Login User
+- POST /auth/login (or /login depending on route setup)
+- Description: Authenticate user and receive JWT token.
+- Body (application/json):
+	{
+		"email": "user@example.com",
+		"password": "string"
+	}
+- Success (200):
+	{
+		"success": true,
+		"message": "Login successful",
+		"token": "<jwt>"
+	}
+- Errors: 401 for invalid credentials.
+
+3) Get Users (Admin / List)
+- GET /users
+- Description: Fetch paginated list of users with optional search, filtering and sorting.
+- Query params:
+	- page (number, default 1)
+	- limit (number, default 10)
+	- search (string) — searches name and email (case-insensitive)
+	- sortby (string) — currently supported id
+	- sortorder (string) — asc or desc
+	- role (string) — filter by role
+- Success (200):
+	{
+		"success": true,
+		"pagination": {
+			"totalUsers": number,
+			"currentPage": number,
+			"totalPages": number,
+			"limit": number
+		},
+		"filters": { "search": "", "sortby": "id", "sortorder": "desc", "role": "" },
+		"users": [ { "id": number, "name": "string", "email": "string", "role": "string" }, ... ]
+	}
+
+4) Get Profile
+- GET /users/me (or /profile depending on route setup)
+- Description: Get authenticated user's profile. Requires Authorization header.
+- Headers:
+	- Authorization: Bearer <token>
+- Success (200):
+	{
+		"success": true,
+		"user": { "id": number, "name": "string", "email": "string" }
+	}
+- Errors: 401 if token missing/invalid; 404 if user not found.
+
+Error Handling
+- API returns HTTP status codes and JSON error messages. Common responses: 400 (bad request), 401 (unauthorized), 404 (not found), 500 (server error).
+
+Notes
+- Passwords are stored hashed (bcrypt).
+- JWT secret must be set in environment: JWT_SECRET
+- Adjust route paths to match your router configuration (examples above follow common conventions).
+
+Contact
+- Repository: check project root for README and route configuration for exact paths.

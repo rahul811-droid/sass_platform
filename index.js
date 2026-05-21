@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import userRoutes from './src/routes/user.route.js';
+import errorMiddleware from './src/middleware/error.middler.js';
 
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.json());
 
 
 app.use('/api/users', userRoutes);
+app.use(errorMiddleware)
 app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
