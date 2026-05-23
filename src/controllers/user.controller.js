@@ -1,5 +1,5 @@
 import prisma from "../config/db.js";
-
+import AppError from "../utils/AppErrors.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createUserSchema } from "../validations/auth.validation.js";

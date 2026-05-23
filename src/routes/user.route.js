@@ -13,6 +13,6 @@ router.post('/create', createUser);
 router.get('/login', loginUser);
 router.get('/profile', authMiddleware, getProfile);
 
-router.get('/', getUsers);
+router.get('/',authMiddleware, getUsers);
 
 export default router;
