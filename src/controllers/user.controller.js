@@ -117,14 +117,23 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     return next(new AppError("Invalid credentials", 401));
   }
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
+
+  const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+  const refreshToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: "7d",
+  });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken },
   });
 
   res.status(200).json({
     success: true,
     message: "Login successful",
-    token,
+    accessToken,
+    refreshToken,
   });
 });
 
