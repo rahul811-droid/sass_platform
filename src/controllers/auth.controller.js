@@ -6,7 +6,6 @@ export const refreshToken = asyncHandler(async(requestAnimationFrame,res,next)=>
     const { refreshToken } = req.body;
     if (!refreshToken) {
         return next(new AppError("Refresh token is required", 400));
-
     }
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await prisma.user.findUnique({

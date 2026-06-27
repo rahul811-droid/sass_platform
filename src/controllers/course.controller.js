@@ -23,7 +23,6 @@ export const createCourse = asyncHandler(async (req, res) => {
       },
     );
     thumbnailUrl = result.secure_url;
-
     console.log("Cloudinary Response:", result);
   } catch (error) {
     console.error("CLOUDINARY ERROR:", error);
