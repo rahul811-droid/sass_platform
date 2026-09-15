@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String
+  role        String   @default("USER")
+  refreshToken String?  @unique
+  createdAt   DateTime @default(now())
+
+  enrollments Enrollment[]
+
+  @@index([email])
+  @@index([name])
+  @@index([role])
+  @@index([createdAt])
+}
+
+
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Int
+  createdAt   DateTime @default(now())
+  thumbnail   String?
+  thumbnailPublicId String?
+  enrollments Enrollment[]
+  sections    Section[]
+
+  @@index([title])
+  @@index([createdAt])
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+
+  userId    Int
+  courseId  Int
+
+  user      User   @relation(fields: [userId], references: [id])
+  course    Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([courseId])
+
+  @@unique([userId, courseId]) // IMPORTANT
+}
+
+model Section {
+  id        Int      @id @default(autoincrement())
+  title     String
+  order     Int
+
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  lessons   Lesson[]
+
+  createdAt DateTime @default(now())
+}
+
+model Lesson {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String?
+
+  videoUrl     String?
+  duration     Int?
+
+  order        Int
+
+  sectionId    Int
+  section      Section  @relation(fields: [sectionId], references: [id])
+
+  createdAt    DateTime @default(now())
+}

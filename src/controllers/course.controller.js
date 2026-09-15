@@ -189,3 +189,32 @@ export const deleteCourse = asyncHandler(async (req, res) => {
     message: "Course deleted successfully",
   });
 });
+
+
+export const getCourseDetailsById = asyncHandler(async (req, res) => {
+  const courseId = parseInt(req.params.id);
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      sections: {
+        orderBy: {
+          order: "asc",
+        },
+        include: {
+          lessons: {
+            orderBy: {
+              order: "asc",
+            },
+          }
+        },
+      },
+    }
+  });
+  if (!course) {
+    throw new AppError("Course not found", 404);
+  }
+  res.status(200).json({
+    success: true,
+    course,
+  });
+});

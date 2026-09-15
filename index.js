@@ -4,6 +4,8 @@ import userRoutes from './src/routes/user.route.js';
 import courseRoutes from './src/routes/course.route.js';
 import enrollmentRoutes from './src/routes/enrollment.route.js';
 import authRoute from './src/routes/auth.route.js';
+import sectionRoutes from './src/routes/section.route.js';
+import lessionRoutes from './src/routes/lession.route.js';
 import errorMiddleware from './src/middleware/error.middler.js';
 import rateLimit from './src/middleware/rateLimit.middleware.js';
 import cloudinary from './src/config/cloudinary.js';
@@ -15,9 +17,11 @@ app.use(express.json());
 
 app.use(rateLimit);
 app.use('/api/auth', authRoute);
+app.use('/api/sections', sectionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/lessons', lessionRoutes);
 app.use(errorMiddleware)
 app.get('/', (req, res) => {
   res.send('Hello, World!');
@@ -35,6 +39,7 @@ app.get("/test-upload", async (req, res) => {
     res.status(500).json(error);
   }
 });
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -5,5 +5,4 @@
 
 .env
 package.json
-prisma/schema.prisma
 node_modules/
