@@ -111,3 +111,14 @@ export const deleteLesson = asyncHandler(async(req,res)=>{
         message: "Lesson deleted successfully"
     })
 })
+export const getLessonDetailsById = asyncHandler(async(req,res)=>{
+
+    const lesson  = req.lesson;
+
+    return res.status(200).json({
+        success: true,
+        message: "Lesson details retrieved successfully",
+        lesson
+    })
+
+})

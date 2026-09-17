@@ -6,6 +6,8 @@ import enrollmentRoutes from './src/routes/enrollment.route.js';
 import authRoute from './src/routes/auth.route.js';
 import sectionRoutes from './src/routes/section.route.js';
 import lessionRoutes from './src/routes/lession.route.js';
+import progressRoutes from './src/routes/progress.rote.js';
+import quizRoutes from './src/routes/quiz.route.js';
 import errorMiddleware from './src/middleware/error.middler.js';
 import rateLimit from './src/middleware/rateLimit.middleware.js';
 import cloudinary from './src/config/cloudinary.js';
@@ -20,8 +22,10 @@ app.use('/api/auth', authRoute);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/quizzes', quizRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/lessons', lessionRoutes);
+app.use('/api/progress', progressRoutes);
 app.use(errorMiddleware)
 app.get('/', (req, res) => {
   res.send('Hello, World!');
